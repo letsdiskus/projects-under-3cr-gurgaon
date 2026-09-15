@@ -522,32 +522,23 @@
   const exitModal = document.getElementById('exit-intent-modal');
 
   function initExitIntent() {
-    // Only on desktop screens
-    if (window.innerWidth < 992) return;
+    // Show the modal shortly after page load (or refresh)
+    setTimeout(() => {
+      // Don't trigger if regular lead modal is already open
+      const leadModal = document.getElementById('lead-modal');
+      if (leadModal && leadModal.classList.contains('is-active')) return;
 
-    // Check if previously shown in this session
-    if (sessionStorage.getItem('gurgaon_exit_intent_shown')) return;
-
-    document.addEventListener('mouseleave', function (e) {
-      if (e.clientY <= 10 && !exitIntentFired) {
-        // Don't trigger if regular lead modal is already open
-        const leadModal = document.getElementById('lead-modal');
-        if (leadModal && leadModal.classList.contains('is-active')) return;
-
+      if (exitModal && !exitIntentFired) {
         exitIntentFired = true;
-        sessionStorage.setItem('gurgaon_exit_intent_shown', 'true');
+        exitModal.classList.add('is-active');
+        exitModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
 
-        if (exitModal) {
-          exitModal.classList.add('is-active');
-          exitModal.setAttribute('aria-hidden', 'false');
-          document.body.style.overflow = 'hidden';
-
-          Analytics.track('popup_open', {
-            popup_type: 'exit_intent_popup'
-          });
-        }
+        Analytics.track('popup_open', {
+          popup_type: 'on_load_popup'
+        });
       }
-    });
+    }, 1500); // 1.5 second delay before showing
   }
 
   initExitIntent();

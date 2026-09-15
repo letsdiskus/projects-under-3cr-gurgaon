@@ -266,7 +266,7 @@ app.post('/api/submit-lead', leadSubmitLimiter, async (req, res) => {
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email || !emailRegex.test(email.trim())) {
+    if (email && !emailRegex.test(email.trim())) {
       return res.status(400).json({
         success: false,
         message: 'Invalid email address provided'
