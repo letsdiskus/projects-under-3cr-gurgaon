@@ -35,35 +35,62 @@ const leadSubmitLimiter = rateLimit({
 
 // Helper: Setup Nodemailer Transporter
 function createEmailTransporter() {
-  // Option 1: Gmail / Google Workspace Service Shorthand
-  if (process.env.SMTP_SERVICE || (process.env.SMTP_USER && process.env.SMTP_USER.includes('@gmail.com'))) {
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS ? process.env.SMTP_PASS.replace(/\s+/g, '') : '';
+
+  if (!user || !pass) {
+    return null;
+  }
+
+  // Option 1: Gmail / Google Workspace via service shorthand
+  if (process.env.SMTP_SERVICE) {
+    console.log(`📧 Using SMTP service: ${process.env.SMTP_SERVICE} for user: ${user}`);
     return nodemailer.createTransport({
-      service: process.env.SMTP_SERVICE || 'gmail',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS ? process.env.SMTP_PASS.replace(/\s+/g, '') : ''
-      }
+      service: process.env.SMTP_SERVICE,
+      auth: { user, pass }
     });
   }
 
-  // Option 2: Custom SMTP Server (Hostinger, GoDaddy, cPanel, SendGrid, etc.)
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+  // Option 2: Custom SMTP Host (Hostinger, cPanel, SendGrid, etc.)
+  if (process.env.SMTP_HOST) {
     const port = parseInt(process.env.SMTP_PORT || '587', 10);
+    const secure = port === 465 || process.env.SMTP_SECURE === 'true';
+    console.log(`📧 Using SMTP host: ${process.env.SMTP_HOST}:${port} (secure=${secure}) for user: ${user}`);
     return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: port,
-      secure: port === 465 || process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
+      secure: secure,
+      auth: { user, pass },
+      tls: { rejectUnauthorized: false }
+    });
+  }
+
+  // Option 3: Auto-detect Gmail/Google Workspace from email domain
+  if (user.includes('@gmail.com') || user.includes('@googlemail.com')) {
+    console.log(`📧 Auto-detected Gmail for user: ${user}`);
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user, pass }
     });
   }
 
   return null;
+}
+
+// Verify SMTP connection on startup
+async function verifyEmailTransporter() {
+  const transporter = createEmailTransporter();
+  if (!transporter) {
+    console.warn('⚠️  No SMTP credentials configured — emails will NOT be sent.');
+    return;
+  }
+  try {
+    await transporter.verify();
+    console.log(`✅ SMTP connection verified — emails will be delivered to ${NOTIFICATION_EMAIL}`);
+  } catch (err) {
+    console.error('❌ SMTP verification FAILED:', err.message);
+    console.error('   → Check SMTP_USER, SMTP_PASS, and SMTP_SERVICE/SMTP_HOST in your .env');
+  }
 }
 
 // Generate Luxury HTML Email
@@ -341,4 +368,5 @@ app.get('/api/health', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Gurgaon Property Advisory Server running on http://localhost:${PORT}`);
   console.log(`📬 Lead Notifications configured for: ${NOTIFICATION_EMAIL}`);
+  verifyEmailTransporter();
 });
