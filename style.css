@@ -335,31 +335,79 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
 }
 
 .brand-identity {
   display: flex;
   align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.header-action {
+  flex-shrink: 0;
 }
 
 .brand-logo-img {
-  height: 100px;
+  height: 72px;
   width: auto;
   display: block;
   border-radius: 4px;
   object-fit: contain;
+  flex-shrink: 0;
 }
 
-/* Make it slightly smaller on mobile */
+.brand-text-name {
+  font-family: var(--font-serif-luxury);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #ffffff;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+/* Responsive adjustments for mobile & tablet */
 @media (max-width: 768px) {
+  .header-container {
+    padding: 0 14px;
+  }
+
+  .brand-identity {
+    gap: 8px;
+  }
+
   .brand-logo-img {
-    height: 70px;
+    height: 48px;
+  }
+
+  .brand-text-name {
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    line-height: 1.15;
+    white-space: normal;
+    max-width: 140px;
+    display: inline-block;
   }
 }
 
 @media (max-width: 480px) {
+  .header-container {
+    padding: 0 10px;
+    gap: 8px;
+  }
+
   .brand-logo-img {
-    height: 56px;
+    height: 42px;
+  }
+
+  .brand-text-name {
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    max-width: 110px;
   }
 }
 
@@ -1405,7 +1453,7 @@ a {
   font-size: 1.625rem;
   font-weight: 600;
   line-height: 1.3;
-  margin-bottom: 18px;
+  margin-bottom: 3px;
 }
 
 .overlay-points {
