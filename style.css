@@ -691,19 +691,46 @@ a {
 /* Phone Input Container */
 .phone-input-container {
   display: flex;
+  align-items: stretch;
 }
 
-.country-prefix {
+.country-prefix,
+.country-select {
   display: flex;
   align-items: center;
-  padding: 0 12px;
-  background: rgba(201, 169, 110, 0.15);
+  padding: 0 22px 0 10px;
+  background: rgba(11, 11, 14, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-right: none;
   border-radius: var(--radius-sm) 0 0 var(--radius-sm);
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--color-gold-light);
+  cursor: pointer;
+  outline: none;
+  width: 115px;
+  min-width: 115px;
+  flex-shrink: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23C9A96E' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  transition: all var(--transition-fast);
+}
+
+.country-select:focus {
+  border-color: var(--color-gold-primary);
+  background-color: rgba(201, 169, 110, 0.15);
+  box-shadow: 0 0 0 3px rgba(201, 169, 110, 0.18);
+}
+
+.country-select option {
+  background: #18181D;
+  color: #FFFFFF;
+  font-size: 0.85rem;
+  padding: 8px;
 }
 
 .phone-control {

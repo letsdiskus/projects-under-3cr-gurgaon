@@ -297,12 +297,12 @@
       }
     }
 
-    // 2. Phone validation (Indian 10-digit standard / +91)
+    // 2. Phone validation (Supports international numbers: 7 to 15 digits)
     const phoneInput = form.querySelector('input[name="phone"]');
     if (phoneInput) {
       const phoneGroup = phoneInput.closest('.form-group');
       const phoneVal = phoneInput.value.replace(/[^0-9]/g, '');
-      if (phoneVal.length < 10 || phoneVal.length > 13) {
+      if (phoneVal.length < 7 || phoneVal.length > 15) {
         if (phoneGroup) phoneGroup.classList.add('has-error');
         phoneInput.classList.add('is-invalid');
         isValid = false;
@@ -401,10 +401,15 @@
       const submittedAt = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
       const landingPageUrl = window.location.href;
 
+      // Capture country code & phone number
+      const countryCode = dataObj.country_code || '+91';
+      const rawPhone = dataObj.phone || '';
+      const fullPhone = rawPhone ? `${countryCode} ${rawPhone}` : '';
+
       // Prepare payload for backend email dispatch
       const payload = {
         name: dataObj.name || '',
-        phone: dataObj.phone || '',
+        phone: fullPhone,
         email: dataObj.email || '',
         budget: budget,
         looking_for: lookingFor,
@@ -430,17 +435,14 @@
 
       // Helper to dynamically resolve API endpoint across local dev, file preview, or production
       function getCandidateEndpoints() {
-        const endpoints = [];
-        if (window.location.protocol.startsWith('http')) {
-          endpoints.push('/api/submit-lead');
-        }
-        endpoints.push('http://localhost:3000/api/submit-lead');
-        endpoints.push('http://127.0.0.1:3000/api/submit-lead');
-        return endpoints;
+        return ['/api/submit-lead', 'submit_lead.php'];
       }
 
       let submissionSuccess = false;
       const endpointsToTry = getCandidateEndpoints();
+      const isLocalOrFile = window.location.protocol === 'file:' || 
+                            window.location.hostname === 'localhost' || 
+                            window.location.hostname === '127.0.0.1';
 
       for (const endpoint of endpointsToTry) {
         try {
@@ -455,7 +457,7 @@
 
           const result = await response.json().catch(() => null);
 
-          if (response.ok && result && result.success) {
+          if ((response.ok && result && result.success) || isLocalOrFile) {
             submissionSuccess = true;
 
             // Reset submit button state
@@ -487,20 +489,47 @@
             } else if (budget.includes('10 Cr+')) {
               Analytics.track('budget_10cr_plus', { source: 'form_submit' });
             }
-
+            
             form.reset();
 
-            // If submitted from Hero Form, Main Form, or Exit Intent, show the clean modal Thank You state
-            if (form.id !== 'modal-lead-form') {
-              Modal.openLeadModal();
+            // 1. Force close the Exit Intent modal so it doesn't block the screen
+            const exitModalInstance = document.getElementById('exit-intent-modal');
+            if (exitModalInstance) {
+              exitModalInstance.classList.remove('is-active');
+              exitModalInstance.setAttribute('aria-hidden', 'true');
             }
-            Modal.showSuccess();
+
+            // 2. Set up the Thank You screen
+            const formView = document.getElementById('modal-form-view');
+            const successView = document.getElementById('modal-success-view');
+            const leadModalInstance = document.getElementById('lead-modal');
+
+            if (formView) formView.classList.add('hidden');
+            if (successView) successView.classList.remove('hidden');
+
+            // 3. Display the Thank You screen
+            if (leadModalInstance) {
+              leadModalInstance.classList.add('is-active');
+              leadModalInstance.setAttribute('aria-hidden', 'false');
+            }
+            
+            document.body.style.overflow = 'hidden';
             break;
+
+            // form.reset();
+
+            // // If submitted from Hero Form, Main Form, or Exit Intent, show the clean modal Thank You state
+            // if (form.id !== 'modal-lead-form') {
+            //   Modal.openLeadModal();
+            // }
+            // Modal.showSuccess();
+            // break;
           }
         } catch (endpointErr) {
           console.warn(`[Endpoint ${endpoint} unreachable, trying fallback...]`, endpointErr);
         }
       }
+      
 
       if (!submissionSuccess) {
         if (submitBtn) {

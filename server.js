@@ -298,6 +298,12 @@ app.post('/api/submit-lead', leadSubmitLimiter, async (req, res) => {
       submitted_at: submitted_at || new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
     };
 
+    // Save lead backup log to leads_log.json
+    try {
+      const fs = require('fs');
+      fs.appendFileSync(path.join(__dirname, 'leads_log.json'), JSON.stringify(leadData) + '\n');
+    } catch (e) {}
+
     // Construct Email Subject & HTML Body
     const emailSubject = `New Gurgaon Property Enquiry – ${leadData.budget} – ${leadData.name}`;
     const emailHtml = generateLeadEmailHtml(leadData);
